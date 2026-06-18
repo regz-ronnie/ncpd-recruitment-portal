@@ -1,0 +1,53 @@
+{
+  "name": "ncpd-recruitment-portal",
+  "version": "1.0.0",
+  "description": "Best-in-class NCPD Recruitment Portal with AI-powered recruitment",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "backend": "cd backend && python manage.py runserver",
+    "frontend": "npm run dev",
+    "setup": "npm install && cd backend && pip install -r requirements.txt",
+    "migrate": "cd backend && python manage.py migrate",
+    "collectstatic": "cd backend && python manage.py collectstatic --noinput"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.7.13",
+    "@heroicons/react": "^2.0.16",
+    "autoprefixer": "^10.4.14",
+    "axios": "^1.3.4",
+    "clsx": "^1.2.1",
+    "date-fns": "^2.29.3",
+    "lucide-react": "^1.8.0",
+    "postcss": "^8.4.21",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.43.5",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.8.1",
+    "recharts": "^2.5.0",
+    "tailwindcss": "^3.2.7"
+    ,
+    "react-quill": "^2.0.0",
+    "quill": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^3.1.0",
+    "vite": "^4.1.0"
+  },
+  "keywords": [
+    "recruitment",
+    "ai",
+    "ncpd",
+    "portal",
+    "kenya",
+    "government"
+  ],
+  "author": "NCPD Development Team",
+  "license": "MIT"
+}
