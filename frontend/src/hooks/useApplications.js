@@ -8,6 +8,8 @@ export function useApplications() {
     'applications',
     async () => {
       const response = await applicationsAPI.getMyApplications()
+      console.log('Applications API response:', response)
+      console.log('Applications data:', response.data)
       return response.data
     },
     {
@@ -16,13 +18,18 @@ export function useApplications() {
   )
 
   const submitApplication = useMutation(
-    async (applicationData) => {
-      const response = await api.post('/v1/applications/', applicationData)
-      return response.data
+    async ({ jobId, ...applicationData }) => {
+      console.log('submitApplication called with jobId:', jobId, 'and data:', applicationData)
+      if (!jobId) {
+        throw new Error('jobId is required for application submission')
+      }
+      const response = await applicationsAPI.applyForJob(jobId, applicationData)
+      return response
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries('applications')
+        queryClient.invalidateQueries('jobs')
       },
     }
   )

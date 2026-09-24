@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
-import { Upload, FileText, AlertCircle, CheckCircle, Sparkles, X } from 'lucide-react'
+import { Upload, FileText, AlertCircle, CheckCircle, X } from 'lucide-react'
 
-export function CVUpload({ onCVUpload, onCVParse, isParsing }) {
+export function CVUpload({ onUpload, isParsing, parsedData, onClear }) {
   const [dragActive, setDragActive] = useState(false)
   const [file, setFile] = useState(null)
   const [error, setError] = useState('')
-  const [parsedData, setParsedData] = useState(null)
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -50,59 +49,14 @@ export function CVUpload({ onCVUpload, onCVParse, isParsing }) {
 
     setError('')
     setFile(file)
-    onCVUpload(file)
+    onUpload?.(file)
   }
 
   const removeFile = () => {
     setFile(null)
-    setParsedData(null)
     setError('')
-  }
-
-  const parseCV = async () => {
-    if (!file) return
-
-    try {
-      setIsParsing(true)
-      // This would call the AI parsing service
-      const formData = new FormData()
-      formData.append('file', file)
-
-      // Mock parsing response - replace with actual API call
-      setTimeout(() => {
-        const mockParsedData = {
-          personalInfo: {
-            name: 'John Doe',
-            email: 'john.doe@example.com',
-            phone: '+254 700 000 000'
-          },
-          experience: [
-            {
-              company: 'Previous Company',
-              position: 'Senior Role',
-              duration: '3 years',
-              description: 'Responsible for...'
-            }
-          ],
-          education: [
-            {
-              institution: 'University Name',
-              degree: 'Bachelor\'s Degree',
-              field: 'Computer Science'
-            }
-          ],
-          skills: ['JavaScript', 'Python', 'Project Management'],
-          summary: 'Experienced professional with...'
-        }
-        
-        setParsedData(mockParsedData)
-        onCVParse(mockParsedData)
-        setIsParsing(false)
-      }, 2000)
-    } catch (error) {
-      setError('Failed to parse CV. Please try again.')
-      setIsParsing(false)
-    }
+    onClear?.()
+    onUpload?.(null)
   }
 
   return (
@@ -177,30 +131,6 @@ export function CVUpload({ onCVUpload, onCVParse, isParsing }) {
         </div>
       )}
 
-      {/* Parse Button */}
-      {file && !parsedData && (
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={parseCV}
-            disabled={isParsing}
-            className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            {isParsing ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Parsing CV...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Parse CV with AI
-              </>
-            )}
-          </button>
-        </div>
-      )}
-
       {/* Parsed Results */}
       {parsedData && (
         <div className="space-y-4">
@@ -218,9 +148,9 @@ export function CVUpload({ onCVUpload, onCVParse, isParsing }) {
             <div className="mb-4">
               <h5 className="text-sm font-medium text-gray-700 mb-2">Personal Information</h5>
               <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>Name:</strong> {parsedData.personalInfo.name}</p>
-                <p><strong>Email:</strong> {parsedData.personalInfo.email}</p>
-                <p><strong>Phone:</strong> {parsedData.personalInfo.phone}</p>
+                <p><strong>Name:</strong> {parsedData.personalInfo?.name || 'N/A'}</p>
+                <p><strong>Email:</strong> {parsedData.personalInfo?.email || 'N/A'}</p>
+                <p><strong>Phone:</strong> {parsedData.personalInfo?.phone || 'N/A'}</p>
               </div>
             </div>
 
@@ -228,7 +158,7 @@ export function CVUpload({ onCVUpload, onCVParse, isParsing }) {
             <div className="mb-4">
               <h5 className="text-sm font-medium text-gray-700 mb-2">Skills</h5>
               <div className="flex flex-wrap gap-2">
-                {parsedData.skills.map((skill, index) => (
+                {(parsedData.skills || []).map((skill, index) => (
                   <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
                     {skill}
                   </span>
@@ -239,7 +169,7 @@ export function CVUpload({ onCVUpload, onCVParse, isParsing }) {
             {/* Summary */}
             <div>
               <h5 className="text-sm font-medium text-gray-700 mb-2">Professional Summary</h5>
-              <p className="text-sm text-gray-600">{parsedData.summary}</p>
+              <p className="text-sm text-gray-600">{parsedData.summary || 'N/A'}</p>
             </div>
           </div>
 

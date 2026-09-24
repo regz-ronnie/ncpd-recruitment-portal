@@ -1,7 +1,7 @@
 import React from 'react'
 import { Plus, Trash2, Calendar, Briefcase } from 'lucide-react'
 
-export function ExperienceForm({ experiences, onExperienceChange, onExperienceAdd, onExperienceRemove }) {
+export function ExperienceForm({ experiences = [], onExperienceChange, onExperienceAdd, onExperienceRemove }) {
   const addNewExperience = () => {
     onExperienceAdd({
       id: Date.now(),

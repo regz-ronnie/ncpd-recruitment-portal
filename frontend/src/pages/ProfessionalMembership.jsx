@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext.jsx'
 
 export function ProfessionalMembership() {
   const location = useLocation()
+  const { user, updateProfile, checkProfileCompletion } = useAuth()
   const [memberships, setMemberships] = useState([
     {
       id: 1,
@@ -14,6 +16,7 @@ export function ProfessionalMembership() {
       description: 'Professional accounting body membership'
     }
   ])
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const handleMembershipAdd = () => {
     const newMembership = {
@@ -36,6 +39,19 @@ export function ProfessionalMembership() {
 
   const handleMembershipRemove = (id) => {
     setMemberships(memberships.filter(membership => membership.id !== id))
+  }
+
+  const handleSaveMemberships = async () => {
+    try {
+      const result = await updateProfile({ memberships })
+      if (result.success) {
+        setSaveSuccess(true)
+        checkProfileCompletion(100)
+        setTimeout(() => setSaveSuccess(false), 3000)
+      }
+    } catch (error) {
+      console.error('Failed to save memberships:', error)
+    }
   }
 
   return (
@@ -86,6 +102,11 @@ export function ProfessionalMembership() {
             <p className="text-gray-600 mb-6">Here, you'll add any registrations/associations with professional bodies such as ICPAK, the EBK, etc.</p>
             
             <div className="space-y-6">
+              {saveSuccess && (
+                <div className="p-4 rounded-lg border border-green-200 bg-green-50 text-green-700">
+                  Professional memberships saved successfully!
+                </div>
+              )}
               {memberships.map((membership) => (
                 <div key={membership.id} className="border border-gray-200 rounded-lg p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -175,7 +196,10 @@ export function ProfessionalMembership() {
             </div>
             
             <div className="mt-6 flex justify-end">
-              <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button 
+                onClick={handleSaveMemberships}
+                className="px-6 py-2 bg-ncpd-primary text-white rounded-lg hover:bg-ncpd-secondary"
+              >
                 Save Changes
               </button>
             </div>

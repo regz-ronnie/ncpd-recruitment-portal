@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat & Attachment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat & Attachment Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Attachment Upload Test</h2>
+        <input type="file" id="testFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        <button onclick="testAttachmentUpload()">Test Upload</button>
+        <div id="uploadResult" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Chat Start Test</h2>
+        <button onclick="testStartConversation()">Start FAQ Conversation</button>
+        <div id="startResult" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Chat Message Test</h2>
+        <input type="text" id="testMessage" placeholder="Enter test message" style="width: 70%; padding: 8px;">
+        <button onclick="testSendMessage()">Send Message</button>
+        <div id="messageResult" class="test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Chat with Attachment Test</h2>
+        <input type="file" id="chatFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+        <input type="text" id="chatMessage" placeholder="Enter message with attachment" style="width: 70%; padding: 8px; margin-top: 10px;">
+        <button onclick="testChatWithAttachment()">Send with Attachment</button>
+        <div id="chatAttachmentResult" class="test-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '/api/v1';
+        let currentConversationId = null;
+
+        async function getAuthToken() {
+            // For testing, you might need to implement proper auth
+            return localStorage.getItem('access_token') || 'test-token';
+        }
+
+        async function testAttachmentUpload() {
+            const fileInput = document.getElementById('testFile');
+            const resultDiv = document.getElementById('uploadResult');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = 'Please select a file first';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('document_type', 'Test Document');
+
+            try {
+                const token = await getAuthToken();
+                const response = await fetch(`${API_BASE_URL}/auth/upload-document/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        <strong>Upload Successful!</strong><br>
+                        File: ${data.file_name}<br>
+                        URL: ${data.url}<br>
+                        Type: ${data.document_type}
+                    `;
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = `Upload failed: ${data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = `Upload error: ${error.message}`;
+            }
+        }
+
+        async function testStartConversation() {
+            const resultDiv = document.getElementById('startResult');
+            
+            try {
+                const token = await getAuthToken();
+                const response = await fetch(`${API_BASE_URL}/ai-engine/conversations/start_conversation/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        conversation_type: 'faq',
+                        initial_query: 'Test conversation start'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentConversationId = data.session_id || data.id;
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        <strong>Conversation Started!</strong><br>
+                        Session ID: ${currentConversationId}<br>
+                        Type: ${data.conversation_type}
+                    `;
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = `Start failed: ${data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = `Start error: ${error.message}`;
+            }
+        }
+
+        async function testSendMessage() {
+            const messageInput = document.getElementById('testMessage');
+            const resultDiv = document.getElementById('messageResult');
+            
+            if (!currentConversationId) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = 'Please start a conversation first';
+                return;
+            }
+
+            if (!messageInput.value.trim()) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = 'Please enter a message';
+                return;
+            }
+
+            try {
+                const token = await getAuthToken();
+                const response = await fetch(`${API_BASE_URL}/ai-engine/conversations/session/${currentConversationId}/continue/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        message: messageInput.value,
+                        attachment: null
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        <strong>Message Sent!</strong><br>
+                        Response: ${data.response}<br>
+                        Status: ${data.status}
+                    `;
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = `Send failed: ${data.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = `Send error: ${error.message}`;
+            }
+        }
+
+        async function testChatWithAttachment() {
+            const fileInput = document.getElementById('chatFile');
+            const messageInput = document.getElementById('chatMessage');
+            const resultDiv = document.getElementById('chatAttachmentResult');
+            
+            if (!currentConversationId) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = 'Please start a conversation first';
+                return;
+            }
+
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = 'Please select a file';
+                return;
+            }
+
+            // First upload the file
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('document_type', 'Chat Attachment');
+
+            try {
+                const token = await getAuthToken();
+                
+                // Upload file
+                const uploadResponse = await fetch(`${API_BASE_URL}/auth/upload-document/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const uploadData = await uploadResponse.json();
+                
+                if (!uploadResponse.ok) {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = `Upload failed: ${uploadData.error || 'Unknown error'}`;
+                    return;
+                }
+
+                // Send message with attachment
+                const attachmentData = {
+                    name: uploadData.file_name,
+                    type: file.type,
+                    url: uploadData.url,
+                    safe_filename: uploadData.safe_filename
+                };
+
+                const chatResponse = await fetch(`${API_BASE_URL}/ai-engine/conversations/session/${currentConversationId}/continue/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        message: messageInput.value || 'Here is a file for you to review',
+                        attachment: attachmentData
+                    })
+                });
+
+                const chatData = await chatResponse.json();
+                
+                if (chatResponse.ok) {
+                    resultDiv.className = 'test-result success';
+                    resultDiv.innerHTML = `
+                        <strong>Chat with Attachment Successful!</strong><br>
+                        File: ${uploadData.file_name}<br>
+                        Response: ${chatData.response}<br>
+                        Status: ${chatData.status}
+                    `;
+                } else {
+                    resultDiv.className = 'test-result error';
+                    resultDiv.textContent = `Chat failed: ${chatData.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import {
   DocumentTextIcon,
   EyeIcon,
   ArrowRightIcon
-} from '@heroicons/react/outline'
+} from '@heroicons/react/24/outline'
 
 export function DataProtection() {
   return (

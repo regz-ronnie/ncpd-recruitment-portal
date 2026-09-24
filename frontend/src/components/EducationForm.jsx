@@ -1,7 +1,7 @@
 import React from 'react'
 import { Plus, Trash2, GraduationCap, Calendar } from 'lucide-react'
 
-export function EducationForm({ education, onEducationChange, onEducationAdd, onEducationRemove }) {
+export function EducationForm({ education = [], onEducationChange, onEducationAdd, onEducationRemove }) {
   const addNewEducation = () => {
     onEducationAdd({
       id: Date.now(),

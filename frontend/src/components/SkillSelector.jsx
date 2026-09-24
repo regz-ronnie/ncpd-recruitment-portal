@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-export function SkillSelector({ skills, selectedSkills, onSkillToggle, onSkillAdd, onSkillRemove }) {
+export function SkillSelector({ skills = [], selectedSkills = [], onSkillToggle, onSkillAdd, onSkillRemove }) {
   const [newSkill, setNewSkill] = useState('')
   const [newLevel, setNewLevel] = useState('beginner')
 

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from 'react-query'
-import api from '../services/api'
+import api, { aiAPI } from '../services/api'
 
 export function useAIInsights() {
   const queryClient = useQueryClient()
@@ -37,15 +37,8 @@ export function useCVParser() {
   const queryClient = useQueryClient()
 
   const parseCV = useMutation(
-    async (file) => {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await api.post('/ai-engine/cv-parsing/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+    async ({ file, jobId }) => {
+      const response = await aiAPI.parseCV(file, jobId)
       return response.data
     },
     {

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
-import { ChevronRight, ChevronLeft, Upload, FileText, AlertCircle, CheckCircle, Sparkles } from 'lucide-react'
-import { useJobDetail } from '../hooks/useJobs'
-import { useApplicationSubmit } from '../hooks/useApplications'
+import { ChevronRight, ChevronLeft, Upload, FileText, AlertCircle, CheckCircle, Sparkles, User } from 'lucide-react'
+import { useJobs } from '../hooks/useJobs'
+import { useApplications } from '../hooks/useApplications'
 import { useCVParser } from '../hooks/useAI'
+import { useAuth } from '../contexts/AuthContext'
 import { ProgressBar } from '../components/ProgressBar'
 import { FormStep } from '../components/FormStep'
 import { SkillSelector } from '../components/SkillSelector'
@@ -15,17 +16,21 @@ import { CVUpload } from '../components/CVUpload'
 const ApplicationForm = () => {
   const { jobId } = useParams()
   const navigate = useNavigate()
+  const { useJobDetail } = useJobs()
   const { data: job, isLoading: jobLoading } = useJobDetail(jobId)
-  const { mutate: submitApplication, isLoading: submitting } = useApplicationSubmit()
-  const { mutate: parseCV, isLoading: parsingCV } = useCVParser()
-  
+  const { submitApplication, applications } = useApplications()
+  const { mutate: submitApplicationMutation, isLoading: submitting } = submitApplication
+  const { mutateAsync: parseCV, isLoading: parsingCV } = useCVParser()
+  const { user, profileCompletion, checkProfileCompletion } = useAuth()
+
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({})
   const [parsedCV, setParsedCV] = useState(null)
   const [showAIAnalysis, setShowAIAnalysis] = useState(false)
-  
+  const [showProfileWarning, setShowProfileWarning] = useState(false)
+
   const totalSteps = 6
-  
+
   const { control, handleSubmit, formState: { errors }, watch, setValue } = useForm({
     defaultValues: {
       personalInfo: {
@@ -64,8 +69,47 @@ const ApplicationForm = () => {
         coverLetterFile: null,
         portfolio: null,
       }
-    }
+    },
   })
+
+  // Check profile completion on mount and populate form with user data
+  useEffect(() => {
+    if (user) {
+      // Use stored profile completion if available, otherwise calculate
+      const storedCompletion = localStorage.getItem('profileCompletion')
+      const completion = storedCompletion ? parseInt(storedCompletion) : checkProfileCompletion(100)
+      
+      if (completion < 100) {
+        setShowProfileWarning(true)
+      }
+
+      // Populate form with user profile data
+      setValue('personalInfo.firstName', user.first_name || user.firstName || '')
+      setValue('personalInfo.lastName', user.last_name || user.lastName || '')
+      setValue('personalInfo.email', user.email || '')
+      setValue('personalInfo.phone', user.phone_number || user.phoneNumber || '')
+      setValue('personalInfo.nationalId', user.national_id || user.idNumber || '')
+      setValue('personalInfo.dateOfBirth', user.date_of_birth || user.dateOfBirth || '')
+      setValue('personalInfo.gender', user.gender || '')
+      setValue('personalInfo.county', user.county || '')
+      setValue('personalInfo.address', user.postal_address || user.postalAddress || '')
+
+      // Populate professional info if available
+      if (user.experiences && user.experiences.length > 0) {
+        setValue('experience', user.experiences)
+      } else if (user.work_experiences && user.work_experiences.length > 0) {
+        setValue('experience', user.work_experiences)
+      } else if (user.workExperiences && user.workExperiences.length > 0) {
+        setValue('experience', user.workExperiences)
+      }
+      if (user.skills) {
+        setValue('skills', user.skills)
+      }
+      if (user.academic_qualifications) {
+        setValue('education', user.academic_qualifications)
+      }
+    }
+  }, [user, checkProfileCompletion, setValue])
 
   const steps = [
     { id: 1, title: 'Personal Information', description: 'Basic contact and personal details' },
@@ -78,30 +122,32 @@ const ApplicationForm = () => {
 
   const handleCVUpload = async (file) => {
     if (!file) return
-    
+
+    setParsedCV(null)
+    setValue('documents.resume', file)
+
     try {
-      const result = await parseCV({ file, jobId })
-      setParsedCV(result.data)
-      
-      // Auto-populate form fields with parsed data
-      if (result.data.personalInfo) {
-        Object.entries(result.data.personalInfo).forEach(([key, value]) => {
+      const parsedData = await parseCV({ file, jobId })
+      setParsedCV(parsedData)
+
+      if (parsedData.personalInfo) {
+        Object.entries(parsedData.personalInfo).forEach(([key, value]) => {
           setValue(`personalInfo.${key}`, value)
         })
       }
-      
-      if (result.data.experience) {
-        setValue('experience', result.data.experience)
+
+      if (parsedData.experience) {
+        setValue('experience', parsedData.experience)
       }
-      
-      if (result.data.education) {
-        setValue('education', result.data.education)
+
+      if (parsedData.education) {
+        setValue('education', parsedData.education)
       }
-      
-      if (result.data.skills) {
-        setValue('skills', result.data.skills)
+
+      if (parsedData.skills) {
+        setValue('skills', parsedData.skills)
       }
-      
+
       setShowAIAnalysis(true)
     } catch (error) {
       console.error('CV parsing failed:', error)
@@ -121,19 +167,24 @@ const ApplicationForm = () => {
   }
 
   const onSubmit = async (data) => {
+    if (currentCompletion < 100) {
+      setShowProfileWarning(true)
+      return
+    }
+
     try {
       const applicationData = {
-        job: jobId,
+        jobId: jobId,
         ...data,
         aiAnalysis: parsedCV,
       }
-      
-      await submitApplication(applicationData)
-      navigate('/application-success', { 
-        state: { 
-          applicationId: 'pending', 
-          jobTitle: job?.title 
-        } 
+
+      await submitApplicationMutation(applicationData)
+      navigate('/application-success', {
+        state: {
+          applicationId: 'pending',
+          jobTitle: job?.title
+        }
       })
     } catch (error) {
       console.error('Application submission failed:', error)
@@ -144,6 +195,131 @@ const ApplicationForm = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="spinner"></div>
+      </div>
+    )
+  }
+
+  // Profile completion warning
+  const ProfileCompletionWarning = () => (
+    <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div className="flex items-start space-x-3">
+        <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+        <div className="flex-1">
+          <h3 className="font-semibold text-yellow-900">Profile Completion Required</h3>
+          <p className="text-yellow-700 text-sm mt-1">
+            Your profile is {currentCompletion}% complete. Please complete your profile before applying to ensure your application is processed smoothly.
+          </p>
+          <p className="text-yellow-700 text-xs mt-2">
+            Required: Personal details, education, and documents (CV, National ID, Degree Certificate)
+          </p>
+          <div className="mt-3">
+            <div className="w-full bg-yellow-200 rounded-full h-2">
+              <div
+                className="bg-yellow-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${currentCompletion}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-yellow-600 mt-1">{currentCompletion}% Complete</p>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => navigate('/my-profile')}
+              className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm hover:bg-yellow-700 transition-colors"
+            >
+              Complete Profile
+            </button>
+            <button
+              onClick={() => setShowProfileWarning(false)}
+              className="px-4 py-2 bg-white text-yellow-700 border border-yellow-300 rounded-lg text-sm hover:bg-yellow-50 transition-colors"
+            >
+              Continue Anyway
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  // Check profile completion - use stored value to avoid timing issues
+  const storedCompletion = localStorage.getItem('profileCompletion')
+  const currentCompletion = storedCompletion ? parseInt(storedCompletion) : profileCompletion
+
+  if (user && currentCompletion < 100) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-yellow-100 text-yellow-600 mb-4">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Complete your profile to continue</h1>
+            <p className="text-gray-600 mt-3">
+              Your profile must be 100% complete before you can access the application form.
+            </p>
+            <div className="mt-4">
+              <div className="w-full bg-yellow-200 rounded-full h-2">
+                <div
+                  className="bg-yellow-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${currentCompletion}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-yellow-600 mt-2">{currentCompletion}% complete</p>
+            </div>
+            <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+              <button
+                onClick={() => navigate('/my-profile')}
+                className="px-5 py-2.5 bg-ncpd-primary text-white rounded-lg hover:bg-ncpd-secondary transition-colors"
+              >
+                Complete Profile
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if user has already applied for this job
+  const hasAlreadyApplied = applications?.data?.data?.some(
+    application => application.job?.id === parseInt(jobId) || application.job === jobId
+  ) || applications?.data?.some(
+    application => application.job?.id === parseInt(jobId) || application.job === jobId
+  )
+
+  if (hasAlreadyApplied) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-100 text-green-600 mb-4">
+              <CheckCircle className="w-7 h-7" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Already Applied</h1>
+            <p className="text-gray-600 mt-3">
+              You have already applied for this position. You can view your application status in your dashboard.
+            </p>
+            <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+              <button
+                onClick={() => navigate('/my-applications')}
+                className="px-5 py-2.5 bg-ncpd-primary text-white rounded-lg hover:bg-ncpd-secondary transition-colors"
+              >
+                View My Applications
+              </button>
+              <button
+                onClick={() => navigate('/vacancies')}
+                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Browse Other Jobs
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -165,12 +341,15 @@ const ApplicationForm = () => {
               </p>
             </div>
           </div>
-          
+
+          {/* Profile Completion Warning */}
+          {showProfileWarning && <ProfileCompletionWarning />}
+
           {/* Progress Bar */}
           <div className="mb-6">
-            <ProgressBar 
-              current={currentStep} 
-              total={totalSteps} 
+            <ProgressBar
+              current={currentStep}
+              total={totalSteps}
               steps={steps}
             />
           </div>
@@ -484,11 +663,14 @@ const ApplicationForm = () => {
                   {/* CV Upload with AI Parsing */}
                   <div>
                     <label className="form-label">Resume/CV *</label>
-                    <CVUpload 
+                    <CVUpload
                       onUpload={handleCVUpload}
-                      isLoading={parsingCV}
-                      value={watch('documents.resume')}
-                      onChange={(file) => setValue('documents.resume', file)}
+                      isParsing={parsingCV}
+                      parsedData={parsedCV}
+                      onClear={() => {
+                        setValue('documents.resume', null)
+                        setParsedCV(null)
+                      }}
                     />
                     <p className="text-sm text-gray-500 mt-1">
                       Upload your CV and we'll automatically extract your information using AI
@@ -618,4 +800,4 @@ const ApplicationForm = () => {
   )
 }
 
-export { ApplicationForm }
+export default ApplicationForm
