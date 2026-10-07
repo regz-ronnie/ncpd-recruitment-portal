@@ -27,10 +27,10 @@ export function Login() {
     try {
       const response = await authAPI.getCaptcha()
       setCaptchaKey(response.data.captcha_key)
-      // Use the same URL resolution as api.js to work on mobile devices
-      const host = window.location.hostname
-      const backendUrl = `http://${host}:8000`
-      setCaptchaImage(`${backendUrl}${response.data.captcha_image}`)
+      // Use the backend URL from environment to work in production
+      const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000/api/v1/`
+      const baseUrl = backendUrl.replace(/\/+$/, '')
+      setCaptchaImage(`${baseUrl}${response.data.captcha_image}`)
     } catch (err) {
       console.error('Failed to load CAPTCHA:', err)
     }
