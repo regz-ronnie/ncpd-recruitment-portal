@@ -215,19 +215,14 @@ export default function VacancyForm() {
     if (path === '/hr' || path === '/hr/dashboard') return 'overview'
     if (path === '/hr/vacancies' || path === '/hr/vacancy-management') return 'vacancies'
     if (path === '/hr/candidates') return 'candidates'
-    if (path === '/hr/eligibility') return 'eligibility'
-    if (path === '/hr/shortlisting') return 'shortlisting'
     if (path === '/hr/longlisting') return 'longlisting'
     if (path === '/hr/pipeline') return 'pipeline'
     if (path === '/hr/shortlisted') return 'shortlisted'
-    if (path === '/hr/hiring') return 'hiring'
     if (path === '/hr/interviews') return 'interviews'
     if (path === '/hr/communication') return 'communication'
     if (path === '/hr/reports') return 'reports'
     if (path === '/hr/audit') return 'audit'
-    if (path === '/hr/document-verification') return 'document_verification'
     if (path === '/hr/panel-management') return 'panel_management'
-    if (path === '/hr/approval-workflow') return 'approval_workflow'
     if (path === '/hr/settings') return 'settings'
     return 'vacancies'
   })()
@@ -289,34 +284,6 @@ export default function VacancyForm() {
                     <span>Applicant Tracking</span>
                   </Link>
                   <Link
-                    to="/hr/eligibility"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'eligibility'
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                        : darkMode
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Eligibility Screening</span>
-                  </Link>
-                  <Link
-                    to="/hr/shortlisting"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'shortlisting'
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                        : darkMode
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>AI Shortlisting</span>
-                  </Link>
-                  <Link
                     to="/hr/longlisting"
                     className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
                       activeTab === 'longlisting'
@@ -357,20 +324,6 @@ export default function VacancyForm() {
                   >
                     <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Shortlisted Candidates</span>
-                  </Link>
-                  <Link
-                    to="/hr/hiring"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'hiring'
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                        : darkMode
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Hiring Workflow</span>
                   </Link>
                   <Link
                     to="/hr/interviews"
@@ -471,20 +424,6 @@ export default function VacancyForm() {
                 <p className="hidden md:block text-xs sm:text-[10px] md:text-xs font-semibold uppercase tracking-[0.15em] text-green-600 mb-3 sm:mb-2 md:mb-3">Compliance</p>
                 <div className={`${sidebarSectionOpen.compliance ? 'block' : 'hidden'} md:block space-y-1`}>
                   <Link
-                    to="/hr/document-verification"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'document_verification'
-                        ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
-                        : darkMode
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 hover:text-green-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Document Verification</span>
-                  </Link>
-                  <Link
                     to="/hr/panel-management"
                     className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
                       activeTab === 'panel_management'
@@ -497,20 +436,6 @@ export default function VacancyForm() {
                   >
                     <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Panel Management</span>
-                  </Link>
-                  <Link
-                    to="/hr/approval-workflow"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'approval_workflow'
-                        ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
-                        : darkMode
-                          ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 hover:text-green-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Approval Workflow</span>
                   </Link>
                 </div>
               </div>

@@ -121,9 +121,7 @@ export default function VacancyManagement() {
     if (path === '/hr/communication') return 'communication'
     if (path === '/hr/reports') return 'reports'
     if (path === '/hr/audit') return 'audit'
-    if (path === '/hr/document-verification') return 'document_verification'
     if (path === '/hr/panel-management') return 'panel_management'
-    if (path === '/hr/approval-workflow') return 'approval_workflow'
     if (path === '/hr/settings') return 'settings'
     return 'vacancies'
   })()
@@ -398,18 +396,6 @@ export default function VacancyManagement() {
                 </button>
                 <p className="hidden md:block text-xs sm:text-[10px] md:text-xs font-semibold uppercase tracking-[0.15em] text-green-600 mb-3 sm:mb-2 md:mb-3">Compliance</p>
                 <div className={`${sidebarSectionOpen.compliance ? 'block' : 'hidden'} md:block space-y-1`}>
-                  <Link
-                    to="/hr/document-verification"
-                    className={`w-full flex items-center space-x-3 sm:space-x-2 md:space-x-3 px-3 sm:px-2 md:px-3 py-3 sm:py-2 md:py-2.5 rounded-xl text-sm sm:text-xs md:text-sm font-medium transition-all duration-200 ${
-                      darkMode 
-                        ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
-                        : 'text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 hover:text-green-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <FileCheck className="w-5 h-5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                    <span>Document Verification</span>
-                  </Link>
                   <Link
                     to="/hr/panel-management"
                     className={`w-full flex items-center space-x-3 sm:space-x-2 md:space-x-3 px-3 sm:px-2 md:px-3 py-3 sm:py-2 md:py-2.5 rounded-xl text-sm sm:text-xs md:text-sm font-medium transition-all duration-200 ${
