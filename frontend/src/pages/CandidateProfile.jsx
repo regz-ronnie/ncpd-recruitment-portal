@@ -460,13 +460,19 @@ export function CandidateProfile() {
         console.log('Work experience loaded:', mappedData[5].experiences.length)
         console.log('Referees loaded:', mappedData[6].referees.length)
         console.log('Attachments before clear logic:', mappedData[7].attachments)
-        
-        // Force clear attachments if flag is set
+
+        // Only clear cover letters when applying for new vacancy
+        // Keep CV, National ID, and other reusable documents
         if (clearAttachmentsParam) {
-          mappedData[7].attachments = []
-          console.log('Attachments force-cleared to empty array')
+          mappedData[7].attachments = mappedData[7].attachments.filter(att => {
+            const docType = att.documentType?.toLowerCase() || ''
+            // Keep documents that are NOT cover letters
+            const isCoverLetter = docType.includes('cover') || docType.includes('letter')
+            return !isCoverLetter
+          })
+          console.log('Cover letters cleared, other attachments retained')
         }
-        
+
         console.log('Attachments after clear logic:', mappedData[7].attachments)
         setFormData(mappedData)
         
@@ -478,7 +484,7 @@ export function CandidateProfile() {
 
         // Show alert if attachments were cleared
         if (clearAttachmentsParam) {
-          alert('Please upload new attachments (CV, Cover Letter, and other required documents) specific to this vacancy before proceeding.')
+          alert('Please upload a new Cover Letter specific to this vacancy. Your CV and other documents have been retained.')
         }
 
         // Calculate and set current completion percentage

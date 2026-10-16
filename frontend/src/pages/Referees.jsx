@@ -165,10 +165,11 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    if (data.referees) {
+    if (data.referees && !editingId) {
+      // Only update if not currently editing to avoid clearing the form
       setReferees(data.referees)
     }
-  }, [data])
+  }, [data.referees, editingId])
 
   return (
     <div className="space-y-4 sm:space-y-6">

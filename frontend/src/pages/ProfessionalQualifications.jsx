@@ -141,10 +141,11 @@ export function ProfessionalQualificationsForm({ data = {}, onChange, onSave }) 
   }
 
   React.useEffect(() => {
-    if (data.qualifications) {
+    if (data.qualifications && !editingId) {
+      // Only update if not currently editing to avoid clearing the form
       setQualifications(data.qualifications)
     }
-  }, [data])
+  }, [data.qualifications, editingId])
 
   return (
     <div className="space-y-4 sm:space-y-6">

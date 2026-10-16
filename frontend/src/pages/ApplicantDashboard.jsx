@@ -1,14 +1,43 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useApplications } from '../hooks/useApplications'
 import { useAuth } from '../contexts/AuthContext'
+import { userAPI } from '../services/api'
 import { LayoutDashboard, User, Briefcase, FileText, GraduationCap, Paperclip, Bell, Download, MessageCircle, Menu, X, LogOut } from 'lucide-react'
 
 export function ApplicantDashboard() {
-  const { user, logout } = useAuth()
+  const { user, logout, dispatch, calculateProfileCompletion } = useAuth()
   const { applications } = useApplications()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+  // Fetch fresh profile data on mount to get accurate completion percentage
+  useEffect(() => {
+    const fetchProfileCompletion = async () => {
+      try {
+        const response = await userAPI.getProfile()
+        const profileData = response.data
+        console.log('Dashboard - Profile data fetched:', profileData)
+        console.log('Dashboard - Profile completion from API:', profileData.profile_completion, '%')
+
+        // Update user in auth context with fresh profile data
+        const updatedUser = { ...user, ...profileData }
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        dispatch({ type: 'UPDATE_PROFILE', payload: updatedUser })
+
+        // Calculate and update completion percentage
+        const completion = profileData.profile_completion || calculateProfileCompletion(updatedUser)
+        dispatch({ type: 'UPDATE_PROFILE_COMPLETION', payload: completion })
+        console.log('Dashboard - Updated completion percentage:', completion, '%')
+      } catch (error) {
+        console.error('Dashboard - Failed to fetch profile completion:', error)
+      }
+    }
+
+    if (user) {
+      fetchProfileCompletion()
+    }
+  }, [])
 
   console.log('Dashboard applications data:', applications)
   console.log('Dashboard applications.data:', applications?.data)

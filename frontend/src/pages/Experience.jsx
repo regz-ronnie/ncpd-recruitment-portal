@@ -147,10 +147,11 @@ export function ExperienceForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    if (data.experiences) {
+    if (data.experiences && !editingId) {
+      // Only update if not currently editing to avoid clearing the form
       setExperiences(data.experiences)
     }
-  }, [data])
+  }, [data.experiences, editingId])
 
   return (
     <div className="space-y-4 sm:space-y-6">

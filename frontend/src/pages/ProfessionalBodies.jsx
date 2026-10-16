@@ -127,10 +127,11 @@ export function ProfessionalBodiesForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    if (data.bodies) {
+    if (data.bodies && !editingId) {
+      // Only update if not currently editing to avoid clearing the form
       setBodies(data.bodies)
     }
-  }, [data])
+  }, [data.bodies, editingId])
 
   return (
     <div className="space-y-4 sm:space-y-6">
