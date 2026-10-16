@@ -148,13 +148,17 @@ export function ExperienceForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    // Only sync from parent data on initial mount
-    // After that, local state is the source of truth
+    // Sync from parent data on initial mount
     if (isInitialMount.current && data.experiences) {
       setExperiences(data.experiences)
       isInitialMount.current = false
     }
-  }, [])
+    // Also sync if parent data has more items (backend saved data)
+    // This ensures UI updates after successful save
+    else if (data.experiences && data.experiences.length > experiences.length) {
+      setExperiences(data.experiences)
+    }
+  }, [data.experiences, experiences.length])
 
   return (
     <div className="space-y-4 sm:space-y-6">

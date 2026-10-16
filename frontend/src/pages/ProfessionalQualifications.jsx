@@ -142,13 +142,17 @@ export function ProfessionalQualificationsForm({ data = {}, onChange, onSave }) 
   }
 
   React.useEffect(() => {
-    // Only sync from parent data on initial mount
-    // After that, local state is the source of truth
+    // Sync from parent data on initial mount
     if (isInitialMount.current && data.qualifications) {
       setQualifications(data.qualifications)
       isInitialMount.current = false
     }
-  }, [])
+    // Also sync if parent data has more items (backend saved data)
+    // This ensures UI updates after successful save
+    else if (data.qualifications && data.qualifications.length > qualifications.length) {
+      setQualifications(data.qualifications)
+    }
+  }, [data.qualifications, qualifications.length])
 
   return (
     <div className="space-y-4 sm:space-y-6">

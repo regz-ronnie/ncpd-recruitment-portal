@@ -166,13 +166,17 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    // Only sync from parent data on initial mount
-    // After that, local state is the source of truth
+    // Sync from parent data on initial mount
     if (isInitialMount.current && data.referees) {
       setReferees(data.referees)
       isInitialMount.current = false
     }
-  }, [])
+    // Also sync if parent data has more items (backend saved data)
+    // This ensures UI updates after successful save
+    else if (data.referees && data.referees.length > referees.length) {
+      setReferees(data.referees)
+    }
+  }, [data.referees, referees.length])
 
   return (
     <div className="space-y-4 sm:space-y-6">

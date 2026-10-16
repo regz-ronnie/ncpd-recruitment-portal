@@ -128,13 +128,17 @@ export function ProfessionalBodiesForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    // Only sync from parent data on initial mount
-    // After that, local state is the source of truth
+    // Sync from parent data on initial mount
     if (isInitialMount.current && data.bodies) {
       setBodies(data.bodies)
       isInitialMount.current = false
     }
-  }, [])
+    // Also sync if parent data has more items (backend saved data)
+    // This ensures UI updates after successful save
+    else if (data.bodies && data.bodies.length > bodies.length) {
+      setBodies(data.bodies)
+    }
+  }, [data.bodies, bodies.length])
 
   return (
     <div className="space-y-4 sm:space-y-6">
