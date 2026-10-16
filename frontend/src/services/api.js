@@ -1,14 +1,23 @@
 import axios from 'axios'
 
-// Point directly to backend server (port 8000) instead of frontend dev server (port 3000)
-// Get the host from current location and replace port with backend port
+// Use the backend URL configured in the environment for production deployments.
+// For local development, fall back to the Django dev server on port 8000.
 const getBackendURL = () => {
+  const configuredUrl = import.meta.env.VITE_API_URL
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, '') + '/'
+  }
+
   const host = window.location.hostname
-  const backendPort = 8000
-  return `http://${host}:${backendPort}/api/v1/`
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return `http://${host}:8000/api/v1/`
+  }
+
+  // When the frontend and API are served from the same origin, prefer a relative path.
+  return '/api/v1/'
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || getBackendURL()
+const API_BASE_URL = getBackendURL()
 
 console.log('API Base URL:', API_BASE_URL)
 
