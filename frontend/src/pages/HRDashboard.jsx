@@ -1134,38 +1134,6 @@ export const HRDashboard = () => {
                     <span>Applicant Tracking</span>
                   </Link>
                   <Link
-                    to="/hr/eligibility"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'eligibility'
-                        ? accessibilityMode
-                          ? 'bg-black text-white shadow-lg'
-                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                        : accessibilityMode
-                          ? 'text-gray-700 hover:bg-gray-200'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Eligibility Screening</span>
-                  </Link>
-                  <Link
-                    to="/hr/shortlisting"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'shortlisting'
-                        ? accessibilityMode
-                          ? 'bg-black text-white shadow-lg'
-                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                        : accessibilityMode
-                          ? 'text-gray-700 hover:bg-gray-200'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>AI Shortlisting</span>
-                  </Link>
-                  <Link
                     to="/hr/longlisting"
                     className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
                       activeTab === 'longlisting'
@@ -1212,22 +1180,6 @@ export const HRDashboard = () => {
                   >
                     <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Shortlisted Candidates</span>
-                  </Link>
-                  <Link
-                    to="/hr/hiring"
-                    className={`w-full flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'hiring'
-                        ? accessibilityMode
-                          ? 'bg-black text-white shadow-lg'
-                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                        : accessibilityMode
-                          ? 'text-gray-700 hover:bg-gray-200'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Hiring Workflow</span>
                   </Link>
                   <Link
                     to="/hr/interviews"
@@ -1338,22 +1290,6 @@ export const HRDashboard = () => {
                 <p className="hidden md:block text-xs sm:text-[10px] md:text-xs font-semibold uppercase tracking-[0.15em] text-green-600 mb-3 sm:mb-2 md:mb-3">Compliance</p>
                 <div className={`${sidebarSectionOpen.compliance ? 'block' : 'hidden'} md:block space-y-1`}>
                   <Link
-                    to="/hr/document-verification"
-                    className={`w-full flex items-center space-x-3 sm:space-x-2 md:space-x-3 px-3 sm:px-2 md:px-3 py-3 sm:py-2 md:py-2.5 rounded-xl text-sm sm:text-xs md:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'document_verification'
-                        ? accessibilityMode
-                          ? 'bg-black text-white shadow-lg'
-                          : 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
-                        : accessibilityMode
-                          ? 'text-gray-700 hover:bg-gray-200'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 hover:text-green-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <FileCheck className="w-5 h-5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                    <span>Document Verification</span>
-                  </Link>
-                  <Link
                     to="/hr/panel-management"
                     className={`w-full flex items-center space-x-3 sm:space-x-2 md:space-x-3 px-3 sm:px-2 md:px-3 py-3 sm:py-2 md:py-2.5 rounded-xl text-sm sm:text-xs md:text-sm font-medium transition-all duration-200 ${
                       activeTab === 'panel_management'
@@ -1380,22 +1316,6 @@ export const HRDashboard = () => {
                     {darkMode ? <Sun className="w-5 h-5 sm:w-4 sm:h-4 md:w-5 md:h-5" /> : <Moon className="w-5 h-5 sm:w-4 sm:h-4 md:w-5 md:h-5" />}
                     <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
-                  <Link
-                    to="/hr/approval-workflow"
-                    className={`w-full flex items-center space-x-3 sm:space-x-2 md:space-x-3 px-3 sm:px-2 md:px-3 py-3 sm:py-2 md:py-2.5 rounded-xl text-sm sm:text-xs md:text-sm font-medium transition-all duration-200 ${
-                      activeTab === 'approval_workflow'
-                        ? accessibilityMode
-                          ? 'bg-black text-white shadow-lg'
-                          : 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg'
-                        : accessibilityMode
-                          ? 'text-gray-700 hover:bg-gray-200'
-                          : 'text-gray-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50 hover:text-green-700'
-                    }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <GitBranch className="w-5 h-5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
-                    <span>Approval Workflow</span>
-                  </Link>
                   <Link
                     to="/hr/settings"
                     className={`w-full flex items-center space-x-3 sm:space-x-2 md:space-x-3 px-3 sm:px-2 md:px-3 py-3 sm:py-2 md:py-2.5 rounded-xl text-sm sm:text-xs md:text-sm font-medium transition-all duration-200 ${
