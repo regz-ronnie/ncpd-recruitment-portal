@@ -15,6 +15,7 @@ export function ProfessionalQualificationsForm({ data = {}, onChange, onSave }) 
   })
   const formRef = useRef(null)
   const firstInputRef = useRef(null)
+  const isInitialMount = useRef(true)
 
   const validateField = (field, value) => {
     if (field === 'startDate' && value) {
@@ -141,11 +142,13 @@ export function ProfessionalQualificationsForm({ data = {}, onChange, onSave }) 
   }
 
   React.useEffect(() => {
-    if (data.qualifications && !editingId) {
-      // Only update if not currently editing to avoid clearing the form
+    // Only sync from parent data on initial mount
+    // After that, local state is the source of truth
+    if (isInitialMount.current && data.qualifications) {
       setQualifications(data.qualifications)
+      isInitialMount.current = false
     }
-  }, [data.qualifications, editingId])
+  }, [])
 
   return (
     <div className="space-y-4 sm:space-y-6">

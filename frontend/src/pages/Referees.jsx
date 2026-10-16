@@ -16,6 +16,7 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
   })
   const formRef = useRef(null)
   const firstInputRef = useRef(null)
+  const isInitialMount = useRef(true)
 
   const validateField = (field, value) => {
     // Email validation
@@ -165,11 +166,13 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    if (data.referees && !editingId) {
-      // Only update if not currently editing to avoid clearing the form
+    // Only sync from parent data on initial mount
+    // After that, local state is the source of truth
+    if (isInitialMount.current && data.referees) {
       setReferees(data.referees)
+      isInitialMount.current = false
     }
-  }, [data.referees, editingId])
+  }, [])
 
   return (
     <div className="space-y-4 sm:space-y-6">

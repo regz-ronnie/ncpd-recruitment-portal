@@ -17,6 +17,7 @@ export function ExperienceForm({ data = {}, onChange, onSave }) {
   })
   const formRef = useRef(null)
   const firstInputRef = useRef(null)
+  const isInitialMount = useRef(true)
 
   const validateField = (field, value) => {
     if (field === 'startDate' && value) {
@@ -147,11 +148,13 @@ export function ExperienceForm({ data = {}, onChange, onSave }) {
   }
 
   React.useEffect(() => {
-    if (data.experiences && !editingId) {
-      // Only update if not currently editing to avoid clearing the form
+    // Only sync from parent data on initial mount
+    // After that, local state is the source of truth
+    if (isInitialMount.current && data.experiences) {
       setExperiences(data.experiences)
+      isInitialMount.current = false
     }
-  }, [data.experiences, editingId])
+  }, [])
 
   return (
     <div className="space-y-4 sm:space-y-6">
