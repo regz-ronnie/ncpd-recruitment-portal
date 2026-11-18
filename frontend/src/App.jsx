@@ -113,9 +113,9 @@ function AppContent() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/vacancies" element={<JobListings />} />
-          <Route path="/vacancies/:id" element={<JobDetail />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/vacancies" element={<ProtectedRoute><JobListings /></ProtectedRoute>} />
+          <Route path="/vacancies/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
+          <Route path="/jobs/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
           <Route path="/application-success" element={<ProtectedRoute><ApplicationSuccess /></ProtectedRoute>} />
           <Route path="/my-applications" element={<ProtectedRoute><ApplicantDashboard /></ProtectedRoute>} />
           <Route path="/internships" element={<ProtectedRoute><Internships /></ProtectedRoute>} />
