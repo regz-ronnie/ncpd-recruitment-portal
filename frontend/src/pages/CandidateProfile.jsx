@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useApplications } from '../hooks/useApplications'
@@ -39,6 +39,8 @@ export function CandidateProfile() {
   const [isSubmittingApplication, setIsSubmittingApplication] = useState(false)
   const [applicationError, setApplicationError] = useState(null)
   const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false)
+  const profileLoadedForUserRef = useRef(null)
+  const clearAttachmentsConsumedRef = useRef(false)
   const { user, dispatch, checkProfileCompletion, calculateProfileCompletion, profileCompletion, logout } = useAuth()
   const { submitApplication } = useApplications()
   const navigate = useNavigate()
@@ -363,12 +365,22 @@ export function CandidateProfile() {
     console.log('localStorage access_token:', localStorage.getItem('access_token'))
 
     // Check if attachments should be cleared (when applying for new vacancy)
-    const clearAttachmentsFlag = localStorage.getItem('clearAttachmentsOnLoad') === 'true' || location.state?.clearAttachments === true
+    // Consume the flag only once — location.state persists across re-renders
+    // and would otherwise re-clear cover letters on every profile reload
+    const clearAttachmentsFlag = !clearAttachmentsConsumedRef.current && (
+      localStorage.getItem('clearAttachmentsOnLoad') === 'true' || location.state?.clearAttachments === true
+    )
     if (clearAttachmentsFlag) {
+      clearAttachmentsConsumedRef.current = true
       console.log('Clearing attachments for new vacancy application')
       console.log('clearAttachments from localStorage:', localStorage.getItem('clearAttachmentsOnLoad'))
       console.log('clearAttachments from location.state:', location.state?.clearAttachments)
       localStorage.removeItem('clearAttachmentsOnLoad')
+      // Clear the flag from router state while preserving vacancy info
+      navigate(location.pathname, {
+        replace: true,
+        state: { ...location.state, clearAttachments: false }
+      })
     }
 
     const loadProfileData = async (clearAttachmentsParam) => {
@@ -630,7 +642,13 @@ export function CandidateProfile() {
     }
 
     if (user) {
-      loadProfileData(clearAttachmentsFlag)
+      // Only load once per user — the [user] dep refires on every profile
+      // update (e.g. after save), which would wipe unsaved form edits
+      const userKey = user.id ?? user.email ?? user.username
+      if (profileLoadedForUserRef.current !== userKey) {
+        profileLoadedForUserRef.current = userKey
+        loadProfileData(clearAttachmentsFlag)
+      }
     } else {
       console.log('No user logged in, skipping profile load')
       setLoading(false)
