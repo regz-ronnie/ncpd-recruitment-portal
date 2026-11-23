@@ -1,25 +1,24 @@
-import React, { useState, useRef } from 'react'
-import { Pencil, Trash2, Plus, Save } from 'lucide-react'
+import React, { useRef, useState } from 'react'
+import { Pencil, Trash2, Plus, Save, Users } from 'lucide-react'
 
-export function RefereesForm({ data = {}, onChange, onSave }) {
-  const [referees, setReferees] = useState(data.referees || [])
-  const [editingId, setEditingId] = useState(null)
+const emptyForm = {
+  refereeName: '',
+  organization: '',
+  position: '',
+  email: '',
+  phoneNumber: '',
+  relationship: '',
+  yearsKnown: ''
+}
+
+export function RefereesForm({ data = {}, onChange }) {
+  const referees = Array.isArray(data.referees) ? data.referees : []
+  const [editingIndex, setEditingIndex] = useState(null)
   const [errors, setErrors] = useState({})
-  const [formData, setFormData] = useState({
-    refereeName: '',
-    organization: '',
-    position: '',
-    email: '',
-    phoneNumber: '',
-    relationship: '',
-    yearsKnown: ''
-  })
-  const formRef = useRef(null)
+  const [formData, setFormData] = useState(emptyForm)
   const firstInputRef = useRef(null)
-  const isInitialMount = useRef(true)
 
   const validateField = (field, value) => {
-    // Email validation
     if (field === 'email' && value) {
       const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
       if (!emailRegex.test(value)) {
@@ -27,7 +26,6 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
       }
     }
 
-    // Phone number validation
     if (field === 'phoneNumber' && value) {
       const phoneRegex = /^\+?[0-9]{10,15}$/
       if (!phoneRegex.test(value.replace(/\s/g, ''))) {
@@ -35,7 +33,6 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
       }
     }
 
-    // Years known validation
     if (field === 'yearsKnown' && value) {
       const years = parseInt(value)
       if (isNaN(years) || years < 0 || years > 50) {
@@ -48,35 +45,37 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    
-    // Validate field on change
     const error = validateField(field, value)
     setErrors(prev => ({ ...prev, [field]: error }))
   }
 
-  const handleAdd = () => {
-    // Validate required fields
+  const validateForm = () => {
     if (!formData.refereeName || !formData.email) {
       alert('Referee Name and Email are required')
+      return false
+    }
+    if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
+      alert('Please enter a valid email address')
+      return false
+    }
+    if (formData.phoneNumber && !/^\+?[0-9]{10,15}$/.test(formData.phoneNumber.replace(/\s/g, ''))) {
+      alert('Please enter a valid phone number')
+      return false
+    }
+    return true
+  }
+
+  const resetForm = () => {
+    setFormData(emptyForm)
+    setEditingIndex(null)
+    setErrors({})
+  }
+
+  const handleAdd = () => {
+    if (!validateForm()) return
+    if (referees.length >= 3) {
+      alert('You can add a maximum of 3 referees')
       return
-    }
-
-    // Validate email format
-    if (formData.email) {
-      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
-      if (!emailRegex.test(formData.email)) {
-        alert('Please enter a valid email address')
-        return
-      }
-    }
-
-    // Validate phone format if provided
-    if (formData.phoneNumber) {
-      const phoneRegex = /^\+?[0-9]{10,15}$/
-      if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
-        alert('Please enter a valid phone number')
-        return
-      }
     }
 
     const newReferee = {
@@ -84,108 +83,67 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
       ...formData
     }
 
-    const updated = [...referees, newReferee]
-    setReferees(updated)
-    onChange({ referees: updated })
-
-    setFormData({
-      refereeName: '',
-      organization: '',
-      position: '',
-      email: '',
-      phoneNumber: '',
-      relationship: '',
-      yearsKnown: ''
-    })
-    setErrors({})
-
-    if (onSave) onSave()
+    // Single source of truth: parent formData -> debounced auto-save persists it
+    onChange({ referees: [...referees, newReferee] })
+    resetForm()
   }
 
-  const handleEdit = (id) => {
-    const referee = referees.find(r => r.id === id)
+  const handleEdit = (index) => {
+    const referee = referees[index]
     if (referee) {
-      setFormData(referee)
-      setEditingId(id)
+      setFormData({
+        refereeName: referee.refereeName || '',
+        organization: referee.organization || '',
+        position: referee.position || '',
+        email: referee.email || '',
+        phoneNumber: referee.phoneNumber || '',
+        relationship: referee.relationship || '',
+        yearsKnown: referee.yearsKnown || ''
+      })
+      setEditingIndex(index)
     }
   }
 
   const handleUpdate = () => {
-    // Validate required fields
-    if (!formData.refereeName || !formData.email) {
-      alert('Referee Name and Email are required')
-      return
-    }
+    if (!validateForm()) return
 
-    // Validate email format
-    if (formData.email) {
-      const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
-      if (!emailRegex.test(formData.email)) {
-        alert('Please enter a valid email address')
-        return
-      }
-    }
-
-    // Validate phone format if provided
-    if (formData.phoneNumber) {
-      const phoneRegex = /^\+?[0-9]{10,15}$/
-      if (!phoneRegex.test(formData.phoneNumber.replace(/\s/g, ''))) {
-        alert('Please enter a valid phone number')
-        return
-      }
-    }
-
-    const updated = referees.map(r =>
-      r.id === editingId ? { ...formData, id: editingId } : r
+    const updated = referees.map((r, i) =>
+      i === editingIndex ? { id: r.id ?? Date.now(), ...formData } : r
     )
 
-    setReferees(updated)
     onChange({ referees: updated })
-
-    setFormData({
-      refereeName: '',
-      organization: '',
-      position: '',
-      email: '',
-      phoneNumber: '',
-      relationship: '',
-      yearsKnown: ''
-    })
-    setEditingId(null)
-    setErrors({})
-
-    if (onSave) onSave()
+    resetForm()
   }
 
-  const handleDelete = (id) => {
-    const updated = referees.filter(r => r.id !== id)
-    setReferees(updated)
-    onChange({ referees: updated })
-
-    if (onSave) onSave()
+  const handleDelete = (index) => {
+    onChange({ referees: referees.filter((_, i) => i !== index) })
+    if (editingIndex === index) resetForm()
   }
 
-  React.useEffect(() => {
-    // Sync from parent data on initial mount
-    if (isInitialMount.current && data.referees) {
-      setReferees(data.referees)
-      isInitialMount.current = false
-    }
-    // Also sync if parent data has more items (backend saved data)
-    // This ensures UI updates after successful save
-    else if (data.referees && data.referees.length > referees.length) {
-      setReferees(data.referees)
-    }
-  }, [data.referees, referees.length])
+  const requiredMet = referees.length === 3
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <h3 className="text-base sm:text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-        Referees
-      </h3>
-      
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 pb-2">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+          Referees
+        </h3>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+          requiredMet ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+        }`}>
+          <Users className="w-3.5 h-3.5" />
+          {referees.length} of 3 required
+        </span>
+      </div>
+
+      {!requiredMet && (
+        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          Exactly 3 referees are required. Add {3 - referees.length} more.
+        </p>
+      )}
+
       {/* Input Form */}
-      <div ref={formRef} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
             <thead className="bg-[#006633]">
@@ -251,7 +209,7 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
                   {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
                 </td>
                 <td className="px-2 sm:px-4 py-2 sm:py-3">
-                  <select 
+                  <select
                     value={formData.relationship}
                     onChange={(e) => handleInputChange('relationship', e.target.value)}
                     className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#006633] focus:border-transparent text-xs sm:text-sm"
@@ -275,21 +233,32 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
                   {errors.yearsKnown && <p className="text-red-500 text-xs mt-1">{errors.yearsKnown}</p>}
                 </td>
                 <td className="px-2 sm:px-4 py-2 sm:py-3">
-                  {editingId ? (
-                    <button 
-                      onClick={handleUpdate}
-                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium"
-                    >
-                      <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      <span className="hidden sm:inline">Update</span>
-                    </button>
+                  {editingIndex !== null ? (
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={handleUpdate}
+                        className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium"
+                      >
+                        <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Update</span>
+                      </button>
+                      <button
+                        onClick={resetForm}
+                        className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors text-xs sm:text-sm font-medium"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => {
                         handleAdd()
-                        if (onSave) onSave()
+                        if (firstInputRef.current) {
+                          firstInputRef.current.focus()
+                        }
                       }}
-                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-xs sm:text-sm font-medium"
+                      disabled={referees.length >= 3}
+                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-xs sm:text-sm font-medium"
                     >
                       <Save className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       <span className="hidden sm:inline">Save</span>
@@ -322,7 +291,7 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {referees.map((referee, index) => (
-                  <tr key={referee.id} className="hover:bg-gray-50">
+                  <tr key={referee.id ?? index} className="hover:bg-gray-50">
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{index + 1}</td>
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{referee.refereeName}</td>
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{referee.organization}</td>
@@ -333,15 +302,15 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
                     <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">{referee.yearsKnown}</td>
                     <td className="px-2 sm:px-4 py-2 sm:py-3">
                       <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => handleEdit(referee.id)}
+                        <button
+                          onClick={() => handleEdit(index)}
                           className="p-1.5 sm:p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
                           title="Edit"
                         >
                           <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
-                        <button 
-                          onClick={() => handleDelete(referee.id)}
+                        <button
+                          onClick={() => handleDelete(index)}
                           className="p-1.5 sm:p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
                           title="Delete"
                         >
@@ -357,22 +326,20 @@ export function RefereesForm({ data = {}, onChange, onSave }) {
         </div>
       )}
 
-      <button 
-        onClick={() => {
-          if (formRef.current) {
-            formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            setTimeout(() => {
-              if (firstInputRef.current) {
-                firstInputRef.current.focus()
-              }
-            }, 500)
-          }
-        }}
-        className="flex items-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#006633] hover:bg-[#004d26] text-white rounded-lg font-medium transition-colors text-xs sm:text-sm"
-      >
-        <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-        Add Referee
-      </button>
+      {referees.length < 3 && (
+        <button
+          onClick={() => {
+            if (firstInputRef.current) {
+              firstInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              firstInputRef.current.focus()
+            }
+          }}
+          className="flex items-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 bg-[#006633] hover:bg-[#004d26] text-white rounded-lg font-medium transition-colors text-xs sm:text-sm"
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          Add Referee ({referees.length}/3)
+        </button>
+      )}
     </div>
   )
 }
