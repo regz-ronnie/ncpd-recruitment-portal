@@ -34,6 +34,15 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
+    // Let the browser set multipart/form-data with boundary for file uploads
+    if (config.data instanceof FormData) {
+      if (config.headers.delete) {
+        config.headers.delete('Content-Type')
+      } else {
+        delete config.headers['Content-Type']
+      }
+    }
+
     // Public endpoints that don't require authentication (more specific matching)
     const publicEndpoints = [
       'jobs/', 
@@ -251,11 +260,7 @@ export const aiAPI = {
     if (jobId) {
       formData.append('job_id', jobId)
     }
-    return api.post('ai-engine/cv-parsing/', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    return api.post('ai-engine/cv-parsing/', formData)
   },
   
   // AI Matching
