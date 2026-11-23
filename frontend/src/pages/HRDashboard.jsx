@@ -439,6 +439,7 @@ export const HRDashboard = () => {
       qualificationsText,
       employmentEntries,
       status: app.status || 'N/A',
+      remarks: app.review_notes || app.reviewNotes || app.notes || '',
       workExperiences,
       academicQuals,
       professionalQuals
@@ -485,6 +486,8 @@ export const HRDashboard = () => {
     gender: 'all',
     minScore: 0
   })
+  const [statusActionModal, setStatusActionModal] = useState(null) // { applications: [], action: '' }
+  const [actionRemarks, setActionRemarks] = useState('')
   
   const queryClient = useQueryClient()
 
@@ -901,12 +904,36 @@ export const HRDashboard = () => {
   }
   
   const handleBulkAction = (applicationIds, action) => {
-    applicationIds.forEach(id => {
-      const app = candidateSource.find(a => a.id === id)
-      if (app) {
-        handleApplicationAction(app, action)
-      }
+    const apps = candidateSource.filter(a => applicationIds.includes(a.id))
+    openStatusActionModal(apps, action)
+  }
+
+  const openStatusActionModal = (apps, action) => {
+    setActionRemarks('')
+    setStatusActionModal({
+      applications: Array.isArray(apps) ? apps : [apps],
+      action
     })
+  }
+
+  const confirmStatusAction = () => {
+    if (!statusActionModal) return
+    const remarks = actionRemarks.trim()
+    const requiresRemarks = ['shortlisted', 'rejected'].includes(statusActionModal.action)
+    if (requiresRemarks && !remarks) {
+      alert('Please provide remarks/reason for this decision.')
+      return
+    }
+    const fallbackNote = `Moved to ${statusActionModal.action} in pipeline`
+    statusActionModal.applications.forEach(app => {
+      updateApplicationStatus.mutate({
+        applicationId: app.id,
+        status: statusActionModal.action,
+        notes: remarks || fallbackNote
+      })
+    })
+    setSelectedApplications([])
+    setStatusActionModal(null)
   }
 
   const handleExport = () => {
@@ -920,6 +947,7 @@ export const HRDashboard = () => {
       Education: app.education_level,
       County: app.county,
       'Applied Date': app.submitted_date,
+      Remarks: app.review_notes || app.reviewNotes || app.notes || '',
     }))
 
     const csvContent = [
@@ -952,7 +980,8 @@ export const HRDashboard = () => {
         Employer: data.employmentEntries.map(e => e.employer).join('\n'),
         Position: data.employmentEntries.map(e => e.position).join('\n'),
         Duration: data.employmentEntries.map(e => e.duration).join('\n'),
-        Status: data.status
+        Status: data.status,
+        Remarks: data.remarks
       }
     })
 
@@ -987,7 +1016,8 @@ export const HRDashboard = () => {
         Employer: data.employmentEntries.map(e => e.employer).join('\n'),
         Position: data.employmentEntries.map(e => e.position).join('\n'),
         Duration: data.employmentEntries.map(e => e.duration).join('\n'),
-        Status: data.status
+        Status: data.status,
+        Remarks: data.remarks
       }
     })
 
@@ -1006,7 +1036,7 @@ export const HRDashboard = () => {
     doc.text(`Total Applicants: ${longlistingApplications.length}`, 14, 27)
     
     // Prepare table data
-    const tableColumn = ['#', 'Name', 'ID No.', 'Age', 'Gender', 'County', 'Degree', 'Qualifications', 'Employer', 'Position', 'Duration', 'Status']
+    const tableColumn = ['#', 'Name', 'ID No.', 'Age', 'Gender', 'County', 'Degree', 'Qualifications', 'Employer', 'Position', 'Duration', 'Status', 'Remarks']
     const tableRows = dataToExport.map(row => [
       row['#'],
       row.Name,
@@ -1019,7 +1049,8 @@ export const HRDashboard = () => {
       row.Employer,
       row.Position,
       row.Duration,
-      row.Status
+      row.Status,
+      row.Remarks
     ])
     
     // Add table to PDF with auto column widths
@@ -1055,7 +1086,8 @@ export const HRDashboard = () => {
         8: { cellWidth: 40 }, // Employer
         9: { cellWidth: 40 }, // Position
         10: { cellWidth: 40 }, // Duration
-        11: { cellWidth: 25 }  // Status
+        11: { cellWidth: 25 }, // Status
+        12: { cellWidth: 50 }  // Remarks
       },
       margin: { top: 35, left: 10, right: 10, bottom: 10 }
     })
@@ -3451,15 +3483,7 @@ export const HRDashboard = () => {
                                   </button>
                                 ) : app.status === 'rejected' ? (
                                   <button
-                                    onClick={() => {
-                                      if (window.confirm(`Are you sure you want to shortlist ${app.name || app.applicant_name || 'this applicant'}?`)) {
-                                        updateApplicationStatus.mutate({
-                                          applicationId: app.id,
-                                          status: 'shortlisted',
-                                          notes: 'Shortlisted from longlisting stage'
-                                        })
-                                      }
-                                    }}
+                                    onClick={() => openStatusActionModal(app, 'shortlisted')}
                                     disabled={updateApplicationStatus.isLoading}
                                     className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium hover:bg-green-50 px-1 sm:px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
@@ -3467,15 +3491,7 @@ export const HRDashboard = () => {
                                   </button>
                                 ) : (
                                   <button
-                                    onClick={() => {
-                                      if (window.confirm(`Are you sure you want to shortlist ${app.name || app.applicant_name || 'this applicant'}?`)) {
-                                        updateApplicationStatus.mutate({
-                                          applicationId: app.id,
-                                          status: 'shortlisted',
-                                          notes: 'Shortlisted from longlisting stage'
-                                        })
-                                      }
-                                    }}
+                                    onClick={() => openStatusActionModal(app, 'shortlisted')}
                                     disabled={updateApplicationStatus.isLoading}
                                     className="text-green-600 hover:text-green-800 text-xs sm:text-sm font-medium hover:bg-green-50 px-1 sm:px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
@@ -3491,15 +3507,7 @@ export const HRDashboard = () => {
                                   </button>
                                 ) : app.status === 'shortlisted' ? (
                                   <button
-                                    onClick={() => {
-                                      if (window.confirm(`Are you sure you want to reject ${app.name || app.applicant_name || 'this applicant'}?`)) {
-                                        updateApplicationStatus.mutate({
-                                          applicationId: app.id,
-                                          status: 'rejected',
-                                          notes: 'Rejected from longlisting stage'
-                                        })
-                                      }
-                                    }}
+                                    onClick={() => openStatusActionModal(app, 'rejected')}
                                     disabled={updateApplicationStatus.isLoading}
                                     className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium hover:bg-red-50 px-1 sm:px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
@@ -3507,15 +3515,7 @@ export const HRDashboard = () => {
                                   </button>
                                 ) : (
                                   <button
-                                    onClick={() => {
-                                      if (window.confirm(`Are you sure you want to reject ${app.name || app.applicant_name || 'this applicant'}?`)) {
-                                        updateApplicationStatus.mutate({
-                                          applicationId: app.id,
-                                          status: 'rejected',
-                                          notes: 'Rejected from longlisting stage'
-                                        })
-                                      }
-                                    }}
+                                    onClick={() => openStatusActionModal(app, 'rejected')}
                                     disabled={updateApplicationStatus.isLoading}
                                     className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium hover:bg-red-50 px-1 sm:px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
@@ -3725,11 +3725,15 @@ export const HRDashboard = () => {
                                     className="text-[10px] sm:text-xs px-1 py-1 border rounded flex-1"
                                     value={app.status}
                                     onChange={(e) => {
-                                      if (window.confirm(`Move ${app.applicant_name || app.name || 'this applicant'} to ${e.target.options[e.target.selectedIndex].text}?`)) {
+                                      const newStatus = e.target.value
+                                      if (['shortlisted', 'rejected'].includes(newStatus)) {
+                                        e.target.value = app.status
+                                        openStatusActionModal(app, newStatus)
+                                      } else {
                                         updateApplicationStatus.mutate({
                                           applicationId: app.id,
-                                          status: e.target.value,
-                                          notes: `Moved to ${e.target.value} in pipeline`
+                                          status: newStatus,
+                                          notes: `Moved to ${newStatus} in pipeline`
                                         })
                                       }
                                     }}
@@ -3871,30 +3875,14 @@ export const HRDashboard = () => {
                                   View
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    if (window.confirm(`Are you sure you want to schedule an interview for ${app.name || app.applicant_name || 'this applicant'}?`)) {
-                                      updateApplicationStatus.mutate({
-                                        applicationId: app.id,
-                                        status: 'interview_scheduled',
-                                        notes: 'Interview scheduled for shortlisted candidate'
-                                      })
-                                    }
-                                  }}
+                                  onClick={() => openStatusActionModal(app, 'interview_scheduled')}
                                   disabled={updateApplicationStatus.isLoading}
                                   className="text-purple-600 hover:text-purple-800 text-xs sm:text-sm font-medium hover:bg-purple-50 px-1 sm:px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   {updateApplicationStatus.isLoading ? 'Processing...' : 'Schedule Interview'}
                                 </button>
                                 <button
-                                  onClick={() => {
-                                    if (window.confirm(`Are you sure you want to reject ${app.name || app.applicant_name || 'this applicant'}?`)) {
-                                      updateApplicationStatus.mutate({
-                                        applicationId: app.id,
-                                        status: 'rejected',
-                                        notes: 'Rejected from shortlisted candidates'
-                                      })
-                                    }
-                                  }}
+                                  onClick={() => openStatusActionModal(app, 'rejected')}
                                   disabled={updateApplicationStatus.isLoading}
                                   className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium hover:bg-red-50 px-1 sm:px-2 py-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -4137,6 +4125,58 @@ export const HRDashboard = () => {
                   className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Status Action Remarks Modal */}
+        {statusActionModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                {statusActionModal.action === 'shortlisted' ? 'Shortlist'
+                  : statusActionModal.action === 'rejected' ? 'Reject'
+                  : statusActionModal.action === 'interview_scheduled' ? 'Schedule Interview'
+                  : 'Update Status'}
+                {statusActionModal.applications.length > 1 ? ' Applicants' : ' Applicant'}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {statusActionModal.applications.length === 1
+                  ? `${statusActionModal.applications[0]?.name || statusActionModal.applications[0]?.applicant_name || 'this applicant'} → ${statusActionModal.action.replace(/_/g, ' ')}`
+                  : `${statusActionModal.applications.length} applicants → ${statusActionModal.action.replace(/_/g, ' ')}`}
+              </p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Remarks / Reason {['shortlisted', 'rejected'].includes(statusActionModal.action) && <span className="text-red-500">*</span>}
+              </label>
+              <textarea
+                value={actionRemarks}
+                onChange={(e) => setActionRemarks(e.target.value)}
+                rows={4}
+                placeholder={
+                  statusActionModal.action === 'shortlisted'
+                    ? 'e.g. Strong relevant experience and meets all requirements'
+                    : statusActionModal.action === 'rejected'
+                    ? 'e.g. Does not meet minimum qualifications'
+                    : 'Optional notes...'
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setStatusActionModal(null)}
+                  className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmStatusAction}
+                  className={`px-4 py-2 text-sm text-white rounded-lg transition-colors ${
+                    statusActionModal.action === 'rejected' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  Confirm
                 </button>
               </div>
             </div>
