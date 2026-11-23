@@ -50,7 +50,7 @@ export function PDFViewer({ url, fileName, onClose, className = '' }) {
         headers: {
           'Accept': 'application/pdf',
         },
-        credentials: 'include'
+        credentials: 'omit'
       })
       
       if (!response.ok) {
@@ -156,7 +156,7 @@ export function PDFViewer({ url, fileName, onClose, className = '' }) {
         headers: {
           'Accept': 'application/pdf',
         },
-        credentials: 'include'
+        credentials: 'omit'
       })
       
       if (!response.ok) {
