@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react'
 import { Pencil, Trash2, Save, Upload } from 'lucide-react'
-import axios from 'axios'
+import api from '../services/api'
 
 export function AttachmentsForm({ data = {}, onChange, onSave }) {
   const [attachments, setAttachments] = useState(data.attachments || [])
@@ -49,13 +49,7 @@ export function AttachmentsForm({ data = {}, onChange, onSave }) {
       formData.append('file', file)
       formData.append('document_type', documentType)
 
-      const token = localStorage.getItem('access_token')
-      const response = await axios.post('/api/v1/auth/upload-document/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await api.post('auth/upload-document/', formData)
 
       return response.data
     } catch (error) {

@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.jsx'
 import { Send, Paperclip, X, MessageSquare, HelpCircle, Briefcase, GraduationCap, LayoutDashboard, User, FileText, Bell, Download, Menu, LogOut } from 'lucide-react'
-import axios from 'axios'
-
-const API_BASE_URL = '/api/v1'
+import api from '../services/api'
 
 export default function Chat() {
   const { logout } = useAuth()
@@ -41,12 +39,9 @@ export default function Chat() {
     setConversationType(type)
 
     try {
-      const token = localStorage.getItem('access_token')
-      const response = await axios.post(`${API_BASE_URL}/ai-engine/conversations/start_conversation/`, {
+      const response = await api.post('ai-engine/conversations/start_conversation/', {
         conversation_type: type,
         initial_query: 'Start conversation'
-      }, {
-        headers: { 'Authorization': `Bearer ${token}` }
       })
 
       if (response.data) {
@@ -125,15 +120,11 @@ export default function Chat() {
     setIsLoading(true)
 
     try {
-      const token = localStorage.getItem('access_token')
-      
       // Try to use the chatbot service if conversation exists
       if (conversationId) {
-        const response = await axios.post(`${API_BASE_URL}/ai-engine/conversations/session/${conversationId}/continue/`, {
+        const response = await api.post(`ai-engine/conversations/session/${conversationId}/continue/`, {
           message: inputMessage,
           attachment: attachmentData
-        }, {
-          headers: { 'Authorization': `Bearer ${token}` }
         })
 
         const botMessage = {
@@ -220,17 +211,11 @@ export default function Chat() {
 
   const uploadChatAttachment = async (file) => {
     try {
-      const token = localStorage.getItem('access_token')
       const formData = new FormData()
       formData.append('file', file)
       formData.append('document_type', 'Chat Attachment')
 
-      const response = await axios.post(`${API_BASE_URL}/auth/upload-document/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await api.post('auth/upload-document/', formData)
 
       return response.data
     } catch (error) {
