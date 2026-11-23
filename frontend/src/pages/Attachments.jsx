@@ -54,7 +54,8 @@ export function AttachmentsForm({ data = {}, onChange, onSave }) {
       return response.data
     } catch (error) {
       console.error('File upload failed:', error)
-      alert('Failed to upload file. Please try again.')
+      const backendError = error.response?.data?.error
+      alert(backendError ? `Upload failed: ${backendError}` : 'Failed to upload file. Please try again.')
       return null
     } finally {
       setUploading(false)
